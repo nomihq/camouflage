@@ -1,0 +1,29 @@
+[workspace]
+members = ["camouflage", "camouflage-core", "camouflage-tests"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Nomi <dev@nomi.so>"]
+license = "MIT"
+
+[workspace.dependencies]
+# CLI and utilities
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+tokio = { version = "1.36", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Audio processing
+cpal = "0.15"
+hound = "3.5"
+
+# Async and networking (for tests)
+reqwest = { version = "0.11", features = ["json", "multipart"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Testing
+criterion = { version = "0.5", features = ["html_reports"] }

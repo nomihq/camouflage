@@ -1,0 +1,30 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/camouflage
+!/camouflage/
+*.exe
+
+# Test artifacts
+*.wav
+*.mp3
+test_output/
+
+# Environment
+.env
+.env.local

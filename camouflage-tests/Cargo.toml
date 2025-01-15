@@ -1,0 +1,28 @@
+[package]
+name = "camouflage-tests"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "camouflage_tests"
+path = "src/whisper.rs"
+
+[dependencies]
+camouflage-core = { path = "../camouflage-core" }
+
+anyhow.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+hound.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "performance"
+harness = false

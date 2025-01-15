@@ -1,0 +1,19 @@
+[package]
+name = "camouflage"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "camouflage"
+path = "src/main.rs"
+
+[dependencies]
+camouflage-core = { path = "../camouflage-core" }
+
+clap.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
