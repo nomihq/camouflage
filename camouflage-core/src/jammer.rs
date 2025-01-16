@@ -9,6 +9,9 @@ use std::sync::Mutex;
 use tracing::{debug, info};
 
 /// Speaker jammer - outputs ultrasonic signal through speakers
+///
+/// This mode outputs ultrasonic signals directly to speakers, which then
+/// interfere with nearby microphones through air conduction.
 pub struct SpeakerJammer {
     generator: Arc<Mutex<SignalGenerator>>,
     stream: Option<Stream>,
@@ -87,6 +90,14 @@ impl Drop for SpeakerJammer {
 }
 
 /// System jammer - creates virtual audio device for system-wide jamming
+///
+/// This mode is designed to prevent remote recording during voice calls by:
+/// 1. Creating a virtual audio device (platform-specific implementation)
+/// 2. Capturing system audio output
+/// 3. Mixing it with ultrasonic jamming signal
+/// 4. Routing the mixed signal to speakers
+///
+/// Current implementation uses SpeakerJammer as a fallback.
 pub struct SystemJammer {
     speaker_jammer: SpeakerJammer,
     mix_ratio: f32,
