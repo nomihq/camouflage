@@ -19,6 +19,8 @@ serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 hound.workspace = true
+tempfile = "3.10"
+tracing-subscriber.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
