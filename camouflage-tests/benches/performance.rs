@@ -1,6 +1,16 @@
+//! Performance benchmarks for camouflage signal generation
+//!
+//! These benchmarks measure:
+//! - Signal generation performance across different tone configurations
+//! - Impact of sample rate on performance
+//! - Buffer size effects on throughput
+//!
+//! Run with: cargo bench
+
 use camouflage_core::{SignalConfig, SignalGenerator};
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 
+/// Benchmark signal generation with varying number of tones
 fn benchmark_signal_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("signal_generation");
 
@@ -26,6 +36,7 @@ fn benchmark_signal_generation(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark impact of different sample rates on performance
 fn benchmark_sample_rates(c: &mut Criterion) {
     let mut group = c.benchmark_group("sample_rates");
 
@@ -51,6 +62,7 @@ fn benchmark_sample_rates(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark throughput with different buffer sizes
 fn benchmark_buffer_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("buffer_sizes");
 
