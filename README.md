@@ -156,9 +156,15 @@ The project is organized as a Rust workspace:
 
 MIT License - see [LICENSE](LICENSE) for details
 
+## Documentation
+
+- [Usage Guide](docs/USAGE.md) - Comprehensive usage instructions
+- [Architecture](docs/ARCHITECTURE.md) - Technical architecture and design
+- [Contributing](docs/CONTRIBUTING.md) - Guide for contributors
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ## Acknowledgments
 
