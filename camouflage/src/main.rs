@@ -15,8 +15,8 @@ struct Cli {
     #[arg(short, long, default_value = "23000")]
     frequency: f32,
 
-    /// Signal amplitude (0.0-1.0) - Use 0.3 or lower to avoid audible distortion
-    #[arg(short, long, default_value = "0.3")]
+    /// Signal amplitude (0.0-1.0) - Optimized default for complete inaudibility
+    #[arg(short, long, default_value = "0.25")]
     amplitude: f32,
 
     /// Number of tones for multi-tone jamming
@@ -62,10 +62,10 @@ fn main() -> anyhow::Result<()> {
     };
 
     // Warn if amplitude is too high (can cause audible distortion)
-    if config.amplitude > 0.5 {
+    if config.amplitude > 0.4 {
         eprintln!("⚠️  Warning: High amplitude ({}) may cause audible distortion.", config.amplitude);
-        eprintln!("   Recommended: Use amplitude 0.3 or lower for inaudible operation.");
-        eprintln!("   The signal will still be effective at lower amplitudes.\n");
+        eprintln!("   Recommended: Use amplitude 0.25 or lower for completely inaudible operation.");
+        eprintln!("   The signal remains highly effective at lower amplitudes.\n");
     }
 
     // Validate that all tones will be in ultrasonic range
@@ -99,7 +99,7 @@ fn main() -> anyhow::Result<()> {
 fn run_speaker_jammer(config: SignalConfig) -> anyhow::Result<()> {
     info!("=== Speaker Jammer Mode ===");
     info!("Frequency: {} Hz", config.frequency);
-    info!("Amplitude: {}", config.amplitude);
+    info!("Amplitude: {} (optimized for inaudibility)", config.amplitude);
     info!("Number of tones: {}", config.num_tones);
 
     let mut jammer = SpeakerJammer::new(config)?;
