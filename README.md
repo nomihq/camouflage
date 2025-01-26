@@ -59,7 +59,7 @@ cargo run -- system
 ### Options
 
 - `-f, --frequency <HZ>`: Ultrasonic frequency (20000-30000 Hz, default: 23000)
-- `-a, --amplitude <VALUE>`: Signal amplitude (0.0-1.0, default: 0.3)
+- `-a, --amplitude <VALUE>`: Signal amplitude (0.0-1.0, default: 0.25 - optimized for inaudibility)
 - `-n, --num-tones <COUNT>`: Number of tones for multi-tone jamming (default: 3)
 - `-s, --spread <HZ>`: Frequency spread for multi-tone (default: 300)
 - `-m, --mix-ratio <VALUE>`: Mix ratio for system mode (0.0-1.0, default: 0.5)

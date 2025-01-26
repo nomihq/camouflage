@@ -22,7 +22,7 @@ impl Default for SignalConfig {
         Self {
             frequency: 23000.0,
             sample_rate: 48000,
-            amplitude: 0.3,
+            amplitude: 0.25, // Optimized for inaudibility while maintaining effectiveness
             num_tones: 3,
             frequency_spread: 300.0,
         }
