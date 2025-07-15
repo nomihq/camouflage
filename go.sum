@@ -1,5 +1,7 @@
 github.com/ebitengine/purego v0.4.1 h1:atcZEBdukuoClmy7TI89amtqAsJUzDQyY/JU7HaK+io=
 github.com/ebitengine/purego v0.4.1/go.mod h1:ah1In8AOtksoNK6yk5z1HTJeUkC1Ez4Wk2idgGslMwQ=
+github.com/gordonklaus/portaudio v0.0.0-20250206071425-98a94950218b h1:WEuQWBxelOGHA6z9lABqaMLMrfwVyMdN3UgRLT+YUPo=
+github.com/gordonklaus/portaudio v0.0.0-20250206071425-98a94950218b/go.mod h1:esZFQEUwqC+l76f2R8bIWSwXMaPbp79PppwZ1eJhFco=
 github.com/hajimehoshi/oto/v2 v2.4.2 h1:uPZq5xEnOv8nIy4eMoDkakLb99YxoNv5XHL7Mm6zHwU=
 github.com/hajimehoshi/oto/v2 v2.4.2/go.mod h1:tINhdh4kCNJ8N19zqp0Lk/wMFv5WQJYkqnnEZ5W5WtE=
 golang.org/x/sys v0.7.0 h1:3jlCCIQZPdOYu1h8BkNvLz8Kgwtae2cagcG/VamtZRU=

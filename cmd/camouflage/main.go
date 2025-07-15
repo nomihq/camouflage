@@ -1,115 +1,158 @@
-
 package main
 
 import (
 	"flag"
 	"fmt"
-	"math"
 	"os"
 
-	"github.com/hajimehoshi/oto/v2"
+	"github.com/gordonklaus/portaudio"
 	"github.com/nullswan/camouflage/internal/ultrasonic"
 )
 
 func main() {
-	// Define a command-line flag for the mode
-	mode := flag.String("mode", "", "Mode to run the application in: 'speaker' or 'system'")
+	portaudio.Initialize()
+	defer portaudio.Terminate()
+
+	mode := flag.String("mode", "", "Mode: 'speaker' or 'system'")
 	flag.Parse()
 
-	// Check the mode and run the corresponding function
 	switch *mode {
 	case "speaker":
 		runSpeakerJammer()
 	case "system":
 		runSystemJammer()
 	default:
-		fmt.Println("Error: Invalid or no mode specified. Use --mode speaker or --mode system")
+		fmt.Println("Error: Use --mode speaker or --mode system")
 		os.Exit(1)
 	}
 }
 
-// runSpeakerJammer will contain the logic for the speaker jammer.
+// --- Speaker Jammer ---
+
 func runSpeakerJammer() {
-	fmt.Println("Speaker Jammer mode activated. Playing ultrasonic frequency.")
+	fmt.Println("Speaker Jammer mode activated.")
 
-	// Generate a 25kHz sine wave for 1 second (it will be looped).
-	ultrasonicData := ultrasonic.GenerateSineWave(25000, 1)
+	ultrasonicData := ultrasonic.GenerateSineWave(25000, 1) // 1 sec loop
+	pos := 0
 
-	// Oto uses a context to manage the audio driver.
-	opts := &oto.NewContextOptions{
-		SampleRate:   ultrasonic.SampleRate,
-		ChannelCount: 1, // Mono
-		Format:       oto.FormatFloat32LE, // 32-bit little-endian float
-	}
-
-	otoCtx, ready, err := oto.NewContextWithOptions(opts)
+	stream, err := portaudio.OpenDefaultStream(0, 1, ultrasonic.SampleRate, 0, func(out []float32) {
+		for i := range out {
+			out[i] = float32(ultrasonicData[pos])
+			pos = (pos + 1) % len(ultrasonicData)
+		}
+	})
 	if err != nil {
-		panic("oto.NewContext failed: " + err.Error())
+		panic(err)
 	}
-	// Wait for the context to be ready.
-	<-ready
+	defer stream.Close()
 
-	// Create a player for the ultrasonic sound.
-	player := otoCtx.NewPlayer(newInfiniteReader(ultrasonicData))
-	player.Play()
+	if err := stream.Start(); err != nil {
+		panic(err)
+	}
 
-	fmt.Println("Playing. Press Ctrl+C to stop.")
-	// Keep the program running to play the sound indefinitely.
+	fmt.Println("Playing ultrasonic frequency. Press Ctrl+C to stop.")
 	select {}
 }
 
-// infiniteReader is a helper to loop the audio data.
-type infiniteReader struct {
-	data []float32
-	pos  int
-}
+// --- System Jammer ---
 
-func newInfiniteReader(data []float64) *infiniteReader {
-	// Convert to float32 for Oto
-	float32Data := make([]float32, len(data))
-	for i, v := range data {
-		float32Data[i] = float32(v)
-	}
-	return &infiniteReader{data: float32Data}
-}
-
-func (r *infiniteReader) Read(buf []byte) (int, error) {
-	bytesPerSample := 4 // 32-bit float
-	numSamplesToWrite := len(buf) / bytesPerSample
-
-	for i := 0; i < numSamplesToWrite; i++ {
-		// Get the sample from our data, looping if necessary.
-		sample := r.data[r.pos]
-		r.pos = (r.pos + 1) % len(r.data)
-
-		// Convert the float32 sample to bytes (Little Endian).
-		b := math.Float32bits(sample)
-		buf[i*4] = byte(b)
-		buf[i*4+1] = byte(b >> 8)
-		buf[i*4+2] = byte(b >> 16)
-		buf[i*4+3] = byte(b >> 24)
-	}
-
-	return len(buf), nil
-}
-
-// runSystemJammer will contain the logic for the on-system jammer.
 func runSystemJammer() {
 	fmt.Println("On-System Jammer mode activated.")
 
-	// 1. Check for and install BlackHole if necessary.
 	if !checkForBlackHole() {
 		if err := installBlackHole(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error during BlackHole installation: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error installing BlackHole: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
-	// 2. Now that we know BlackHole is installed, we can proceed with audio routing.
-	fmt.Println("BlackHole is ready. Starting audio processing...")
-	// TODO: Implement audio capture from BlackHole, mixing, and output.
-	// This will involve using oto to read from BlackHole and write to the default output.
+	fmt.Println("Starting audio processing...")
+	fmt.Println("Please set 'BlackHole 2ch' as your system's audio output.")
 
-	fmt.Println("System Jammer logic is not fully implemented yet. Exiting.")
+	in, out := openSystemJammerStreams()
+	defer in.Close()
+	defer out.Close()
+
+	if err := in.Start(); err != nil {
+		panic(err)
+	}
+	if err := out.Start(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Audio loop running. Press Ctrl+C to stop.")
+	select {}
 }
 
+func openSystemJammerStreams() (*portaudio.Stream, *portaudio.Stream) {
+	blackhole, err := findDeviceByName(blackHoleDeviceName)
+	if err != nil {
+		panic("Could not find BlackHole device. Is it installed?")
+	}
+
+	defaultOut, err := portaudio.DefaultOutputDevice()
+	if err != nil {
+		panic(err)
+	}
+
+	ultrasonicData := ultrasonic.GenerateSineWave(25000, 1)
+	ultrasonicPos := 0
+
+	// This buffer will pass audio from the input stream to the output stream.
+	buffer := make([]float32, 1024)
+
+	// Input stream (from BlackHole)
+	inputStream, err := portaudio.OpenStream(portaudio.StreamParameters{
+		Input: portaudio.StreamDeviceParameters{Device: blackhole, Channels: 2},
+		SampleRate:      ultrasonic.SampleRate,
+		FramesPerBuffer: len(buffer) / 2,
+	}, func(in []float32) {
+		copy(buffer, in)
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Output stream (to default speakers)
+	outputStream, err := portaudio.OpenStream(portaudio.StreamParameters{
+		Output: portaudio.StreamDeviceParameters{Device: defaultOut, Channels: 2},
+		SampleRate:       ultrasonic.SampleRate,
+		FramesPerBuffer:  len(buffer) / 2,
+	}, func(out []float32) {
+		for i := range out {
+			// Mix input audio with ultrasonic signal
+			mixedSample := buffer[i] + float32(ultrasonicData[ultrasonicPos])
+
+			// Clip the signal
+			if mixedSample > 1.0 {
+				mixedSample = 1.0
+			} else if mixedSample < -1.0 {
+				mixedSample = -1.0
+			}
+			out[i] = mixedSample
+
+			// Advance ultrasonic position for the next sample
+			if i%2 == 1 { // Advance only once per stereo frame
+				ultrasonicPos = (ultrasonicPos + 1) % len(ultrasonicData)
+			}
+		}
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return inputStream, outputStream
+}
+
+func findDeviceByName(name string) (*portaudio.DeviceInfo, error) {
+	devices, err := portaudio.Devices()
+	if err != nil {
+		return nil, err
+	}
+	for _, device := range devices {
+		if device.Name == name {
+			return device, nil
+		}
+	}
+	return nil, fmt.Errorf("device not found: %s", name)
+}
