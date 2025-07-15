@@ -1,3 +1,3 @@
-module github.com/nullswan/camouflage
+module github.com/nomihq/camouflage
 
 go 1.24.5
