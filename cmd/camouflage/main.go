@@ -96,6 +96,20 @@ func (r *infiniteReader) Read(buf []byte) (int, error) {
 // runSystemJammer will contain the logic for the on-system jammer.
 func runSystemJammer() {
 	fmt.Println("On-System Jammer mode activated.")
-	// TODO: Implement virtual audio device and ultrasonic injection
+
+	// 1. Check for and install BlackHole if necessary.
+	if !checkForBlackHole() {
+		if err := installBlackHole(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error during BlackHole installation: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	// 2. Now that we know BlackHole is installed, we can proceed with audio routing.
+	fmt.Println("BlackHole is ready. Starting audio processing...")
+	// TODO: Implement audio capture from BlackHole, mixing, and output.
+	// This will involve using oto to read from BlackHole and write to the default output.
+
+	fmt.Println("System Jammer logic is not fully implemented yet. Exiting.")
 }
 
