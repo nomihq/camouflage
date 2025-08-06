@@ -197,3 +197,134 @@ func BenchmarkGenerateSineWave_LongDuration(b *testing.B) {
 		GenerateSineWave(freq, duration)
 	}
 }
+
+func TestValidateFrequency(t *testing.T) {
+	tests := []struct {
+		name    string
+		freq    float64
+		wantErr bool
+	}{
+		{"Valid ultrasonic frequency", 25000.0, false},
+		{"Minimum valid frequency", 20000.0, false},
+		{"Maximum valid frequency", 30000.0, false},
+		{"Too low frequency", 15000.0, true},
+		{"Too high frequency", 35000.0, true},
+		{"Negative frequency", -1000.0, true},
+		{"Zero frequency", 0.0, true},
+		{"Just above minimum", 20001.0, false},
+		{"Just below maximum", 29999.0, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateFrequency(tt.freq)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateFrequency() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGenerateMultiTone(t *testing.T) {
+	tests := []struct {
+		name      string
+		baseFreq  float64
+		duration  int
+		harmonics int
+		wantLen   int
+	}{
+		{"3 harmonics, 1 second", 25000.0, 1, 3, SampleRate},
+		{"5 harmonics, 2 seconds", 24000.0, 2, 5, SampleRate * 2},
+		{"Zero duration", 25000.0, 0, 3, 0},
+		{"Zero harmonics", 25000.0, 1, 0, 0},
+		{"Single harmonic", 25000.0, 1, 1, SampleRate},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := GenerateMultiTone(tt.baseFreq, tt.duration, tt.harmonics)
+			
+			if len(data) != tt.wantLen {
+				t.Errorf("GenerateMultiTone() length = %d, want %d", len(data), tt.wantLen)
+			}
+			
+			// Check amplitude range
+			for i, val := range data {
+				if val < -1.1 || val > 1.1 { // Allow slight overshoot due to mixing
+					t.Errorf("Sample %d out of reasonable range: %f", i, val)
+					break
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateSweep(t *testing.T) {
+	tests := []struct {
+		name      string
+		startFreq float64
+		endFreq   float64
+		duration  int
+		wantLen   int
+	}{
+		{"Upward sweep", 24000.0, 26000.0, 1, SampleRate},
+		{"Downward sweep", 26000.0, 24000.0, 1, SampleRate},
+		{"Same frequency", 25000.0, 25000.0, 1, SampleRate},
+		{"Zero duration", 25000.0, 26000.0, 0, 0},
+		{"Long duration", 24000.0, 26000.0, 3, SampleRate * 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := GenerateSweep(tt.startFreq, tt.endFreq, tt.duration)
+			
+			if len(data) != tt.wantLen {
+				t.Errorf("GenerateSweep() length = %d, want %d", len(data), tt.wantLen)
+			}
+			
+			// Check amplitude range
+			for i, val := range data {
+				if val < -1.0 || val > 1.0 {
+					t.Errorf("Sample %d out of range [-1.0, 1.0]: %f", i, val)
+					break
+				}
+			}
+		})
+	}
+}
+
+func TestConstants(t *testing.T) {
+	if MinFreq >= MaxFreq {
+		t.Error("MinFreq should be less than MaxFreq")
+	}
+	
+	if MinFreq <= 0 {
+		t.Error("MinFreq should be positive")
+	}
+	
+	if SampleRate <= 0 {
+		t.Error("SampleRate should be positive")
+	}
+}
+
+func BenchmarkGenerateMultiTone(b *testing.B) {
+	baseFreq := 25000.0
+	duration := 1
+	harmonics := 3
+	
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		GenerateMultiTone(baseFreq, duration, harmonics)
+	}
+}
+
+func BenchmarkGenerateSweep(b *testing.B) {
+	startFreq := 24000.0
+	endFreq := 26000.0
+	duration := 1
+	
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		GenerateSweep(startFreq, endFreq, duration)
+	}
+}
