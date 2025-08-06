@@ -15,8 +15,8 @@ jobs:
     # Skip review for draft PRs or PRs with \"Draft\" or \"draft\" in title
     if: |
       github.event.pull_request.draft == false &&
-      \!startsWith(github.event.pull_request.title, \"Draft\") &&
-      \!startsWith(github.event.pull_request.title, \"draft\")
+      !startsWith(github.event.pull_request.title, 'Draft') &&
+      !startsWith(github.event.pull_request.title, 'draft')
     
     # Optional: Filter by PR author
     # if: |
