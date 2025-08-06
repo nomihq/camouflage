@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/oto/v2"
-	"github.com/nullswan/camouflage/internal/ultrasonic"
+	"github.com/nomihq/camouflage/internal/ultrasonic"
 )
 
 func main() {
