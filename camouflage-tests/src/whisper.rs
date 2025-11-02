@@ -51,7 +51,10 @@ impl WhisperClient {
 
     /// Transcribe audio file with Whisper
     pub async fn transcribe_file(&self, audio_path: &Path) -> Result<WhisperResult> {
-        info!("Transcribing audio file with Whisper: {}", audio_path.display());
+        info!(
+            "Transcribing audio file with Whisper: {}",
+            audio_path.display()
+        );
 
         // Read audio file
         let mut file = File::open(audio_path)

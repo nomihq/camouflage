@@ -2,7 +2,7 @@ use camouflage_core::SignalConfig;
 use camouflage_tests::{DeepgramClient, OpenAITTS};
 use std::env;
 use tempfile::TempDir;
-use tracing::{info};
+use tracing::info;
 use tracing_subscriber;
 
 const TEST_PHRASE: &str = "The quick brown fox jumps over the lazy dog.";
