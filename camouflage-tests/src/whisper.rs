@@ -1,9 +1,9 @@
-pub mod test_utils;
-pub mod openai_tts;
 pub mod deepgram;
+pub mod openai_tts;
+pub mod test_utils;
 
-pub use openai_tts::OpenAITTS;
 pub use deepgram::{DeepgramClient, DeepgramResult};
+pub use openai_tts::OpenAITTS;
 
 use anyhow::{Context, Result};
 use reqwest::Client;
@@ -59,7 +59,10 @@ impl WhisperClient {
 
     /// Transcribe audio file with Whisper
     pub async fn transcribe_file(&self, audio_path: &Path) -> Result<WhisperResult> {
-        info!("Transcribing audio file with Whisper: {}", audio_path.display());
+        info!(
+            "Transcribing audio file with Whisper: {}",
+            audio_path.display()
+        );
 
         // Read audio file
         let mut file = File::open(audio_path)

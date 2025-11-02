@@ -16,8 +16,7 @@ pub fn generate_pure_ultrasonic(
         sample_format: hound::SampleFormat::Int,
     };
 
-    let mut writer = WavWriter::create(output_path, spec)
-        .context("Failed to create WAV writer")?;
+    let mut writer = WavWriter::create(output_path, spec).context("Failed to create WAV writer")?;
 
     let mut generator = SignalGenerator::new(config.clone());
     let num_samples = (config.sample_rate as f32 * duration_secs) as usize;

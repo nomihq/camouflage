@@ -8,7 +8,7 @@
 //! Run with: cargo bench
 
 use camouflage_core::{SignalConfig, SignalGenerator};
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
 /// Benchmark signal generation with varying number of tones
 fn benchmark_signal_generation(c: &mut Criterion) {

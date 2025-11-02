@@ -8,6 +8,12 @@ pub struct LinuxSystemAudio {
     sink_name: String,
 }
 
+impl Default for LinuxSystemAudio {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LinuxSystemAudio {
     pub fn new() -> Self {
         Self {
@@ -64,11 +70,17 @@ impl LinuxSystemAudio {
             .context("Failed to create loopback")?;
 
         if !output.status.success() {
-            warn!("Loopback creation warning: {}", String::from_utf8_lossy(&output.stderr));
+            warn!(
+                "Loopback creation warning: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
 
         info!("✓ PulseAudio virtual device created");
-        info!("  Set '{}' as default output in your system settings", self.sink_name);
+        info!(
+            "  Set '{}' as default output in your system settings",
+            self.sink_name
+        );
 
         Ok(())
     }

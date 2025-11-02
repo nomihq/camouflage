@@ -2,8 +2,7 @@ use camouflage_core::SignalConfig;
 use camouflage_tests::{OpenAITTS, WhisperClient};
 use std::env;
 use tempfile::TempDir;
-use tracing::{info, warn};
-use tracing_subscriber;
+use tracing::info;
 
 const TEST_PHRASE: &str = "The quick brown fox jumps over the lazy dog.";
 
@@ -89,17 +88,19 @@ async fn test_whisper_pure_ultrasonic_not_transcribable() {
     // Consider it jammed if: empty, or just 1-2 hallucinated words
     let is_jammed = result.word_count <= 2;
 
-    info!("Assessment: {}", if is_jammed {
-        "✓ Effectively jammed (no meaningful transcription)"
-    } else {
-        "❌ Not jammed (meaningful transcription detected)"
-    });
+    info!(
+        "Assessment: {}",
+        if is_jammed {
+            "✓ Effectively jammed (no meaningful transcription)"
+        } else {
+            "❌ Not jammed (meaningful transcription detected)"
+        }
+    );
 
     assert!(
         is_jammed,
         "Pure ultrasonic should not produce meaningful transcription. Got {} words: '{}'",
-        result.word_count,
-        result.transcript
+        result.word_count, result.transcript
     );
 
     info!("✓ Pure ultrasonic audio is effectively jammed by Whisper");
@@ -119,21 +120,27 @@ async fn test_whisper_multiple_configurations() {
     let temp_dir = TempDir::new().unwrap();
 
     let configurations = vec![
-        ("single_tone", SignalConfig {
-            frequency: 23000.0,
-            sample_rate: 44100,
-            amplitude: 0.3,
-            num_tones: 1,
-            frequency_spread: 0.0,
-        }),
+        (
+            "single_tone",
+            SignalConfig {
+                frequency: 23000.0,
+                sample_rate: 44100,
+                amplitude: 0.3,
+                num_tones: 1,
+                frequency_spread: 0.0,
+            },
+        ),
         ("multi_tone_3", SignalConfig::default()),
-        ("multi_tone_5", SignalConfig {
-            frequency: 22000.0,
-            sample_rate: 44100,
-            amplitude: 0.3,
-            num_tones: 5,
-            frequency_spread: 400.0,
-        }),
+        (
+            "multi_tone_5",
+            SignalConfig {
+                frequency: 22000.0,
+                sample_rate: 44100,
+                amplitude: 0.3,
+                num_tones: 5,
+                frequency_spread: 400.0,
+            },
+        ),
     ];
 
     info!("Testing various ultrasonic configurations against Whisper...\n");

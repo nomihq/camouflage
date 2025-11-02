@@ -1,10 +1,9 @@
+use camouflage_core::{get_status, is_running, save_pid, stop_daemon};
 use camouflage_core::{SignalConfig, SpeakerJammer, SystemJammer};
-use camouflage_core::{is_running, save_pid, stop_daemon, get_status};
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
 use std::path::PathBuf;
 use tracing::info;
-use tracing_subscriber;
 
 #[derive(Parser)]
 #[command(name = "camouflage")]
@@ -96,8 +95,13 @@ fn main() -> anyhow::Result<()> {
 
     // Warn if amplitude is too high (can cause audible distortion)
     if config.amplitude > 0.4 {
-        eprintln!("⚠️  Warning: High amplitude ({}) may cause audible distortion.", config.amplitude);
-        eprintln!("   Recommended: Use amplitude 0.25 or lower for completely inaudible operation.");
+        eprintln!(
+            "⚠️  Warning: High amplitude ({}) may cause audible distortion.",
+            config.amplitude
+        );
+        eprintln!(
+            "   Recommended: Use amplitude 0.25 or lower for completely inaudible operation."
+        );
         eprintln!("   The signal remains highly effective at lower amplitudes.\n");
     }
 
@@ -111,7 +115,8 @@ fn main() -> anyhow::Result<()> {
         eprintln!("   Adjusting to keep all tones above 20kHz...\n");
 
         // Adjust configuration to keep all tones ultrasonic
-        let needed_frequency = 20000.0 + (config.num_tones as f32 / 2.0) * config.frequency_spread + 500.0;
+        let needed_frequency =
+            20000.0 + (config.num_tones as f32 / 2.0) * config.frequency_spread + 500.0;
         config.frequency = needed_frequency;
     }
 
@@ -342,8 +347,7 @@ fn install_autostart() -> anyhow::Result<()> {
 #[cfg(target_os = "macos")]
 fn uninstall_autostart() -> anyhow::Result<()> {
     let home = std::env::var("HOME")?;
-    let plist_path = PathBuf::from(&home)
-        .join("Library/LaunchAgents/so.nomi.camouflage.plist");
+    let plist_path = PathBuf::from(&home).join("Library/LaunchAgents/so.nomi.camouflage.plist");
 
     if plist_path.exists() {
         std::process::Command::new("launchctl")
@@ -370,8 +374,7 @@ fn uninstall_autostart() -> anyhow::Result<()> {
         .output()?;
 
     let home = std::env::var("HOME")?;
-    let service_path = PathBuf::from(&home)
-        .join(".config/systemd/user/camouflage.service");
+    let service_path = PathBuf::from(&home).join(".config/systemd/user/camouflage.service");
 
     if service_path.exists() {
         std::fs::remove_file(&service_path)?;
@@ -390,7 +393,10 @@ fn uninstall_autostart() -> anyhow::Result<()> {
 fn run_speaker_jammer(config: SignalConfig) -> anyhow::Result<()> {
     info!("=== Speaker Jammer Mode ===");
     info!("Frequency: {} Hz", config.frequency);
-    info!("Amplitude: {} (optimized for inaudibility)", config.amplitude);
+    info!(
+        "Amplitude: {} (optimized for inaudibility)",
+        config.amplitude
+    );
     info!("Number of tones: {}", config.num_tones);
 
     let mut jammer = SpeakerJammer::new(config)?;

@@ -68,7 +68,10 @@ impl DeepgramClient {
 
     /// Transcribe audio file with Deepgram
     pub async fn transcribe_file(&self, audio_path: &Path) -> Result<DeepgramResult> {
-        info!("Transcribing audio file with Deepgram: {}", audio_path.display());
+        info!(
+            "Transcribing audio file with Deepgram: {}",
+            audio_path.display()
+        );
 
         // Read audio file
         let mut file = File::open(audio_path)

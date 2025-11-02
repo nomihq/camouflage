@@ -28,8 +28,7 @@ pub fn get_config_dir() -> Result<PathBuf> {
         .context("Failed to get config directory")?
         .join("camouflage");
 
-    fs::create_dir_all(&config_dir)
-        .context("Failed to create config directory")?;
+    fs::create_dir_all(&config_dir).context("Failed to create config directory")?;
 
     Ok(config_dir)
 }
@@ -74,8 +73,7 @@ pub fn is_running() -> bool {
 pub fn save_pid() -> Result<()> {
     let pid_file = get_pid_file()?;
     let pid = std::process::id();
-    fs::write(&pid_file, pid.to_string())
-        .context("Failed to write PID file")?;
+    fs::write(&pid_file, pid.to_string()).context("Failed to write PID file")?;
     info!("Saved daemon PID: {}", pid);
     Ok(())
 }
@@ -84,8 +82,7 @@ pub fn save_pid() -> Result<()> {
 pub fn remove_pid() -> Result<()> {
     let pid_file = get_pid_file()?;
     if pid_file.exists() {
-        fs::remove_file(&pid_file)
-            .context("Failed to remove PID file")?;
+        fs::remove_file(&pid_file).context("Failed to remove PID file")?;
     }
     Ok(())
 }
@@ -99,9 +96,10 @@ pub fn stop_daemon() -> Result<()> {
         return Ok(());
     }
 
-    let pid_str = fs::read_to_string(&pid_file)
-        .context("Failed to read PID file")?;
-    let pid = pid_str.trim().parse::<i32>()
+    let pid_str = fs::read_to_string(&pid_file).context("Failed to read PID file")?;
+    let pid = pid_str
+        .trim()
+        .parse::<i32>()
         .context("Invalid PID in file")?;
 
     info!("Stopping daemon (PID: {})...", pid);
@@ -115,7 +113,10 @@ pub fn stop_daemon() -> Result<()> {
             .context("Failed to kill process")?;
 
         if !output.status.success() {
-            warn!("Failed to stop daemon: {}", String::from_utf8_lossy(&output.stderr));
+            warn!(
+                "Failed to stop daemon: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 
@@ -128,7 +129,10 @@ pub fn stop_daemon() -> Result<()> {
             .context("Failed to kill process")?;
 
         if !output.status.success() {
-            warn!("Failed to stop daemon: {}", String::from_utf8_lossy(&output.stderr));
+            warn!(
+                "Failed to stop daemon: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 

@@ -4,8 +4,15 @@ use std::process::Command;
 use tracing::{info, warn};
 
 /// macOS system audio implementation using BlackHole
+#[allow(dead_code)]
 pub struct MacOSSystemAudio {
     device_name: String,
+}
+
+impl Default for MacOSSystemAudio {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MacOSSystemAudio {
@@ -20,9 +27,7 @@ impl MacOSSystemAudio {
         Command::new("system_profiler")
             .args(["SPAudioDataType"])
             .output()
-            .map(|output| {
-                String::from_utf8_lossy(&output.stdout).contains("BlackHole")
-            })
+            .map(|output| String::from_utf8_lossy(&output.stdout).contains("BlackHole"))
             .unwrap_or(false)
     }
 

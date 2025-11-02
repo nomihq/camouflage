@@ -1,5 +1,5 @@
-pub mod macos;
 pub mod linux;
+pub mod macos;
 pub mod windows;
 
 use anyhow::Result;

@@ -3,8 +3,15 @@ use anyhow::Result;
 use tracing::{info, warn};
 
 /// Windows system audio implementation
+#[allow(dead_code)]
 pub struct WindowsSystemAudio {
     device_name: String,
+}
+
+impl Default for WindowsSystemAudio {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WindowsSystemAudio {

@@ -2,12 +2,12 @@
 //!
 //! Core functionality for ultrasonic audio jamming.
 
-mod signal;
+pub mod daemon;
 mod jammer;
 pub mod platform;
-pub mod daemon;
+mod signal;
 
-pub use signal::{SignalConfig, SignalGenerator};
+pub use daemon::{get_status, is_running, remove_pid, save_pid, stop_daemon, DaemonConfig};
 pub use jammer::{SpeakerJammer, SystemJammer};
 pub use platform::SystemAudio;
-pub use daemon::{DaemonConfig, is_running, save_pid, remove_pid, stop_daemon, get_status};
+pub use signal::{SignalConfig, SignalGenerator};

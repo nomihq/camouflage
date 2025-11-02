@@ -125,10 +125,7 @@ impl SystemJammer {
 
     /// Start jamming
     pub fn start(&mut self) -> Result<()> {
-        info!(
-            "Starting system jammer (mix ratio: {})",
-            self.mix_ratio
-        );
+        info!("Starting system jammer (mix ratio: {})", self.mix_ratio);
         self.speaker_jammer.start()
     }
 
@@ -151,11 +148,9 @@ mod tests {
     #[test]
     fn test_speaker_jammer_creation() {
         let config = SignalConfig::default();
-        let result = SpeakerJammer::new(config);
 
         // This might fail in CI without audio devices
-        if result.is_ok() {
-            let mut jammer = result.unwrap();
+        if let Ok(mut jammer) = SpeakerJammer::new(config) {
             assert!(jammer.start().is_ok());
             jammer.stop();
         }
@@ -164,11 +159,9 @@ mod tests {
     #[test]
     fn test_system_jammer_creation() {
         let config = SignalConfig::default();
-        let result = SystemJammer::new(config, 0.5);
 
         // This might fail in CI without audio devices
-        if result.is_ok() {
-            let mut jammer = result.unwrap();
+        if let Ok(mut jammer) = SystemJammer::new(config, 0.5) {
             assert!(jammer.start().is_ok());
             jammer.stop();
         }
