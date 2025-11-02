@@ -73,7 +73,7 @@ jobs:
 
     - name: Run Whisper E2E tests
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         DEEPGRAM_API_KEY: ${{ secrets.DEEPGRAM_API_KEY }}
       run: |
         cargo test --test e2e_whisper test_whisper_transcribes_clean_audio -- --ignored --nocapture
