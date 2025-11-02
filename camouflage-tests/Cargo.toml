@@ -7,7 +7,7 @@ license.workspace = true
 
 [lib]
 name = "camouflage_tests"
-path = "src/whisper.rs"
+path = "src/lib.rs"
 
 [dependencies]
 camouflage-core = { path = "../camouflage-core" }

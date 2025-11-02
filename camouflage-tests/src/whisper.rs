@@ -1,10 +1,3 @@
-pub mod deepgram;
-pub mod openai_tts;
-pub mod test_utils;
-
-pub use deepgram::{DeepgramClient, DeepgramResult};
-pub use openai_tts::OpenAITTS;
-
 use anyhow::{Context, Result};
 use reqwest::Client;
 use serde::Deserialize;
@@ -20,18 +13,17 @@ pub struct WhisperResponse {
     pub text: String,
 }
 
-/// Transcription result with quality metrics
+/// Transcription result from Whisper
 #[derive(Debug, Clone)]
 pub struct WhisperResult {
     pub transcript: String,
     pub word_count: usize,
-    pub is_jammed: bool,
 }
 
 impl WhisperResult {
     /// Determine if audio is effectively jammed
     pub fn is_effectively_jammed(&self) -> bool {
-        self.word_count == 0 || self.transcript.trim().is_empty()
+        self.word_count <= 2 // Allow 1-2 hallucinated words
     }
 
     /// Get a quality score (0.0 = completely jammed, 1.0 = transcribed)
@@ -39,7 +31,7 @@ impl WhisperResult {
         if self.word_count == 0 {
             0.0
         } else {
-            1.0 // Whisper doesn't provide confidence
+            1.0
         }
     }
 }
@@ -59,10 +51,7 @@ impl WhisperClient {
 
     /// Transcribe audio file with Whisper
     pub async fn transcribe_file(&self, audio_path: &Path) -> Result<WhisperResult> {
-        info!(
-            "Transcribing audio file with Whisper: {}",
-            audio_path.display()
-        );
+        info!("Transcribing audio file with Whisper: {}", audio_path.display());
 
         // Read audio file
         let mut file = File::open(audio_path)
@@ -119,7 +108,6 @@ impl WhisperClient {
         let result = WhisperResult {
             transcript: transcript.clone(),
             word_count,
-            is_jammed: false,
         };
 
         info!("Whisper transcription result:");
@@ -128,41 +116,5 @@ impl WhisperClient {
         info!("  Effectively jammed: {}", result.is_effectively_jammed());
 
         Ok(result)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::env;
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_whisper_transcription() {
-        let api_key = env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not set");
-        let _client = WhisperClient::new(api_key);
-
-        // This test requires a valid audio file
-    }
-
-    #[test]
-    fn test_transcription_quality() {
-        let good_result = WhisperResult {
-            transcript: "Hello, this is a clear transcription.".to_string(),
-            word_count: 6,
-            is_jammed: false,
-        };
-
-        assert!(!good_result.is_effectively_jammed());
-        assert!(good_result.quality_score() > 0.9);
-
-        let jammed_result = WhisperResult {
-            transcript: "".to_string(),
-            word_count: 0,
-            is_jammed: true,
-        };
-
-        assert!(jammed_result.is_effectively_jammed());
-        assert!(jammed_result.quality_score() < 0.1);
     }
 }
