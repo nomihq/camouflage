@@ -43,8 +43,9 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         DEEPGRAM_API_KEY: ${{ secrets.DEEPGRAM_API_KEY }}
       run: |
-        echo "Deepgram tests will be added when e2e_deepgram test file is created"
-        echo "For now, running Whisper tests which validate similar functionality"
+        cargo test --test e2e_deepgram test_deepgram_transcribes_clean_audio -- --ignored --nocapture
+        cargo test --test e2e_deepgram test_deepgram_pure_ultrasonic_not_transcribable -- --ignored --nocapture
+        cargo test --test e2e_deepgram test_deepgram_multiple_configurations -- --ignored --nocapture
 
   e2e-whisper:
     name: E2E - OpenAI Whisper
