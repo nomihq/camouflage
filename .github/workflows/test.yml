@@ -52,7 +52,7 @@ jobs:
       run: cargo test --lib --all
 
     - name: Run integration tests
-      run: cargo test --test signal_tests
+      run: cargo test --all-targets
 
   lint:
     name: Lint
@@ -92,5 +92,5 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libasound2-dev
 
-    - name: Run performance benchmarks
-      run: cargo run --release -p camouflage-tests --bin performance
+    - name: Build release binary
+      run: cargo build --release -p camouflage

@@ -1,6 +1,8 @@
 use camouflage_core::{SignalConfig, SpeakerJammer, SystemJammer};
+use camouflage_core::{is_running, save_pid, stop_daemon, get_status};
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
+use std::path::PathBuf;
 use tracing::info;
 use tracing_subscriber;
 
@@ -39,6 +41,37 @@ enum Mode {
         #[arg(short, long, default_value = "0.5")]
         mix_ratio: f32,
     },
+
+    /// Run in daemon mode (background process)
+    Daemon {
+        #[command(subcommand)]
+        command: DaemonCommand,
+    },
+
+    /// Install system mode audio device for your platform
+    Install,
+}
+
+#[derive(Subcommand)]
+enum DaemonCommand {
+    /// Start daemon in speaker mode
+    Start {
+        /// Daemon mode (speaker or system)
+        #[arg(short, long, default_value = "speaker")]
+        mode: String,
+    },
+
+    /// Stop running daemon
+    Stop,
+
+    /// Check daemon status
+    Status,
+
+    /// Enable auto-start on boot
+    Enable,
+
+    /// Disable auto-start on boot
+    Disable,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -91,8 +124,266 @@ fn main() -> anyhow::Result<()> {
     match cli.mode {
         Mode::Speaker => run_speaker_jammer(config)?,
         Mode::System { mix_ratio } => run_system_jammer(config, mix_ratio)?,
+        Mode::Daemon { command } => run_daemon_command(command, config)?,
+        Mode::Install => run_install()?,
     }
 
+    Ok(())
+}
+
+fn run_daemon_command(command: DaemonCommand, config: SignalConfig) -> anyhow::Result<()> {
+    match command {
+        DaemonCommand::Start { mode } => {
+            if is_running() {
+                println!("❌ Daemon is already running");
+                println!("   Use 'camouflage daemon stop' to stop it first");
+                return Ok(());
+            }
+
+            println!("🚀 Starting daemon in {} mode...", mode);
+
+            // Daemonize the process
+            #[cfg(unix)]
+            {
+                unsafe {
+                    let pid = libc::fork();
+                    if pid < 0 {
+                        anyhow::bail!("Failed to fork process");
+                    }
+                    if pid > 0 {
+                        // Parent process
+                        println!("✓ Daemon started (PID: {})", pid);
+                        return Ok(());
+                    }
+                    // Child process continues
+                    libc::setsid();
+                }
+            }
+
+            // Save PID
+            save_pid()?;
+
+            // Run the jammer
+            if mode == "speaker" {
+                let mut jammer = SpeakerJammer::new(config)?;
+                jammer.start()?;
+
+                // Run forever
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(60));
+                }
+            } else {
+                let mut jammer = SystemJammer::new(config, 0.5)?;
+                jammer.start()?;
+
+                // Run forever
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(60));
+                }
+            }
+        }
+
+        DaemonCommand::Stop => {
+            println!("🛑 Stopping daemon...");
+            stop_daemon()?;
+            println!("✓ Daemon stopped");
+        }
+
+        DaemonCommand::Status => {
+            let status = get_status();
+            println!("Daemon status: {}", status);
+        }
+
+        DaemonCommand::Enable => {
+            println!("⚙️  Enabling auto-start...");
+            install_autostart()?;
+            println!("✓ Auto-start enabled");
+        }
+
+        DaemonCommand::Disable => {
+            println!("⚙️  Disabling auto-start...");
+            uninstall_autostart()?;
+            println!("✓ Auto-start disabled");
+        }
+    }
+
+    Ok(())
+}
+
+fn run_install() -> anyhow::Result<()> {
+    println!("🔧 Installing system audio device...\n");
+
+    #[cfg(target_os = "macos")]
+    {
+        use camouflage_core::platform;
+        let audio = platform::get_system_audio();
+        audio.create_virtual_device()?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use camouflage_core::platform;
+        let audio = platform::get_system_audio();
+        audio.create_virtual_device()?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        use camouflage_core::platform;
+        let audio = platform::get_system_audio();
+        audio.create_virtual_device()?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn install_autostart() -> anyhow::Result<()> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let home = std::env::var("HOME")?;
+    let launch_agents_dir = PathBuf::from(&home).join("Library/LaunchAgents");
+    fs::create_dir_all(&launch_agents_dir)?;
+
+    let plist_path = launch_agents_dir.join("so.nomi.camouflage.plist");
+    let exe_path = std::env::current_exe()?;
+
+    let plist_content = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>so.nomi.camouflage</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{}</string>
+        <string>daemon</string>
+        <string>start</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/camouflage.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/camouflage.err</string>
+</dict>
+</plist>"#,
+        exe_path.display()
+    );
+
+    fs::write(&plist_path, plist_content)?;
+
+    // Load the agent
+    std::process::Command::new("launchctl")
+        .args(["load", plist_path.to_str().unwrap()])
+        .output()?;
+
+    println!("✓ LaunchAgent installed: {}", plist_path.display());
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn install_autostart() -> anyhow::Result<()> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let home = std::env::var("HOME")?;
+    let systemd_dir = PathBuf::from(&home).join(".config/systemd/user");
+    fs::create_dir_all(&systemd_dir)?;
+
+    let service_path = systemd_dir.join("camouflage.service");
+    let exe_path = std::env::current_exe()?;
+
+    let service_content = format!(
+        r#"[Unit]
+Description=Camouflage Audio Jammer
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart={} daemon start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target"#,
+        exe_path.display()
+    );
+
+    fs::write(&service_path, service_content)?;
+
+    // Enable and start service
+    std::process::Command::new("systemctl")
+        .args(["--user", "enable", "camouflage.service"])
+        .output()?;
+
+    std::process::Command::new("systemctl")
+        .args(["--user", "start", "camouflage.service"])
+        .output()?;
+
+    println!("✓ systemd service installed: {}", service_path.display());
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn install_autostart() -> anyhow::Result<()> {
+    println!("⚠️  Windows auto-start:");
+    println!("   1. Press Win+R");
+    println!("   2. Type: shell:startup");
+    println!("   3. Create shortcut to camouflage.exe with arguments: daemon start");
+    println!("   4. Place shortcut in the Startup folder");
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn uninstall_autostart() -> anyhow::Result<()> {
+    let home = std::env::var("HOME")?;
+    let plist_path = PathBuf::from(&home)
+        .join("Library/LaunchAgents/so.nomi.camouflage.plist");
+
+    if plist_path.exists() {
+        std::process::Command::new("launchctl")
+            .args(["unload", plist_path.to_str().unwrap()])
+            .output()?;
+
+        std::fs::remove_file(&plist_path)?;
+        println!("✓ LaunchAgent removed");
+    } else {
+        println!("Auto-start was not enabled");
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn uninstall_autostart() -> anyhow::Result<()> {
+    std::process::Command::new("systemctl")
+        .args(["--user", "stop", "camouflage.service"])
+        .output()?;
+
+    std::process::Command::new("systemctl")
+        .args(["--user", "disable", "camouflage.service"])
+        .output()?;
+
+    let home = std::env::var("HOME")?;
+    let service_path = PathBuf::from(&home)
+        .join(".config/systemd/user/camouflage.service");
+
+    if service_path.exists() {
+        std::fs::remove_file(&service_path)?;
+        println!("✓ systemd service removed");
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn uninstall_autostart() -> anyhow::Result<()> {
+    println!("Remove the shortcut from shell:startup folder");
     Ok(())
 }
 

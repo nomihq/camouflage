@@ -56,6 +56,47 @@ cargo run -- system
 ./target/release/camouflage system -m 0.5
 ```
 
+### Daemon Mode (Background Operation)
+
+Run Camouflage continuously in the background:
+
+```bash
+# Start daemon
+camouflage daemon start
+
+# Check status
+camouflage daemon status
+
+# Stop daemon
+camouflage daemon stop
+
+# Enable auto-start on boot
+camouflage daemon enable
+
+# Disable auto-start
+camouflage daemon disable
+```
+
+**Auto-start details:**
+- **macOS**: Installs LaunchAgent (`~/Library/LaunchAgents/so.nomi.camouflage.plist`)
+- **Linux**: Installs systemd user service (`~/.config/systemd/user/camouflage.service`)
+- **Windows**: Instructions for Startup folder shortcut
+
+### Install System Audio Device
+
+Set up platform-specific virtual audio for system mode:
+
+```bash
+# macOS: Installs BlackHole via Homebrew
+camouflage install
+
+# Linux: Creates PulseAudio loopback
+camouflage install
+
+# Windows: Shows VB-Cable installation instructions
+camouflage install
+```
+
 ### Options
 
 - `-f, --frequency <HZ>`: Ultrasonic frequency (20000-30000 Hz, default: 23000)

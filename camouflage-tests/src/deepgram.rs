@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
