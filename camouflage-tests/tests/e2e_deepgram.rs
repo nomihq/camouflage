@@ -3,14 +3,13 @@ use camouflage_tests::{DeepgramClient, OpenAITTS};
 use std::env;
 use tempfile::TempDir;
 use tracing::info;
-use tracing_subscriber;
 
 const TEST_PHRASE: &str = "The quick brown fox jumps over the lazy dog.";
 
 #[tokio::test]
 #[ignore] // Run with: cargo test --test e2e_deepgram -- --ignored
 async fn test_deepgram_transcribes_clean_audio() {
-    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     info!("=== E2E Deepgram Clean Audio Test ===");
 
@@ -60,7 +59,7 @@ async fn test_deepgram_transcribes_clean_audio() {
 #[tokio::test]
 #[ignore]
 async fn test_deepgram_pure_ultrasonic_not_transcribable() {
-    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     info!("=== Pure Ultrasonic Deepgram Test ===");
 
@@ -106,7 +105,7 @@ async fn test_deepgram_pure_ultrasonic_not_transcribable() {
 #[tokio::test]
 #[ignore]
 async fn test_deepgram_multiple_configurations() {
-    let _ = tracing_subscriber::fmt().with_env_filter("info").try_init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     info!("=== Deepgram Multiple Configurations Test ===");
 
